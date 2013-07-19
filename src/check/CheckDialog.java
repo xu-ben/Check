@@ -21,7 +21,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.math.BigInteger;
-import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.zip.CRC32;
@@ -38,8 +37,6 @@ import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
-import javax.swing.ProgressMonitor;
-import javax.swing.Timer;
 
 /**
  * 执行md5、sha-1、crc32等编码计算的对话框，可以对文件进行运算，也可对文本进行
@@ -65,6 +62,11 @@ public final class CheckDialog extends JDialog {
 	private JTextField fileField = new JTextField("");
 	
 	/**
+	 * 用于显示当前输入的文本
+	 */
+	private JTextField textField = new JTextField("");
+	
+	/**
 	 * 是否进行MD5运算的标记
 	 */
 	private JCheckBox md5check = new JCheckBox("MD5");
@@ -84,7 +86,7 @@ public final class CheckDialog extends JDialog {
 	 */
 	private boolean uppercase = false;
 	
-	private JPanel getNorthPanel() {
+	private JPanel getNorthUpPanel() {
 		JPanel ret = new JPanel();
 		ret.setLayout(new BorderLayout(5, 0));
 		JLabel fil = new JLabel("文件:");
@@ -93,6 +95,8 @@ public final class CheckDialog extends JDialog {
 		fileField.setBackground(Color.WHITE);
 		ret.add(BorderLayout.CENTER, fileField);
 
+		JPanel east = new JPanel();
+		east.setLayout(new GridLayout(1, 2));
 		/*
 		 * 浏览文件的按钮
 		 */
@@ -103,9 +107,53 @@ public final class CheckDialog extends JDialog {
 				onButtonScan();
 			}
 		});
+		east.add(buttonScan);
+		JButton buttonComput = new JButton("文件校验");
+		buttonComput.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+				onButtonFileCheck();
+				setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+			}
+		});
+		east.add(buttonComput);
 		
-		ret.add(BorderLayout.EAST, buttonScan);
+		ret.add(BorderLayout.EAST, east);
 		
+		return ret;
+	}
+	
+	private JPanel getNorthDownPanel() {
+		JPanel ret = new JPanel();
+		ret.setLayout(new BorderLayout(5, 0));
+		JLabel fil = new JLabel("文本:");
+		ret.add(BorderLayout.WEST, fil);
+		textField.setEditable(true);
+		textField.setBackground(Color.WHITE);
+		ret.add(BorderLayout.CENTER, textField);
+
+		/*
+		 * 浏览文件的按钮
+		 */
+		JButton buttonComput = new JButton("文本校验");
+		buttonComput.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				onButtonTextCheck();
+			}
+		});
+		
+		ret.add(BorderLayout.EAST, buttonComput);
+		
+		return ret;
+	}
+	
+	private JPanel getNorthPanel() {
+		JPanel ret = new JPanel();
+		ret.setLayout(new GridLayout(2, 1));
+		ret.add(getNorthUpPanel());
+		ret.add(getNorthDownPanel());
 		return ret;
 	}
 	
@@ -173,18 +221,8 @@ public final class CheckDialog extends JDialog {
 		ret.add(getSouthCenterPanel(), BorderLayout.CENTER);
 		
 		JPanel right = new JPanel();
-		right.setLayout(new GridLayout(1, 2));
-		JButton comput = new JButton("运行");
-		comput.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-				onButtonComput();
-				setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-			}
-		});
-		right.add(comput);
-		JButton clear = new JButton("清空");
+		right.setLayout(new GridLayout(1, 1));
+		JButton clear = new JButton("清空结果");
 		clear.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -247,8 +285,17 @@ public final class CheckDialog extends JDialog {
 		return true;
 	}
 	
-	private void onButtonComput() {
-		
+	private void onButtonTextCheck() {
+		String str = doTextCheck();
+		if(uppercase) {
+			str = str.toUpperCase();
+		}else {
+			str = str.toLowerCase();
+		}
+		outputArea.append(str);
+	}
+	
+	private void onButtonFileCheck() {
 //		long t = System.currentTimeMillis();
 //		doOnce();
 		/*
@@ -258,7 +305,7 @@ public final class CheckDialog extends JDialog {
 		 * 缓冲区设为1024，独立运行平均时间累计：150791 ms.
 		 * 区别不大，为编程方便，采用分别独立运行的方法
 		 */
-		String str = doSeperate();
+		String str = doFileCheck();
 		if(uppercase) {
 			str = str.toUpperCase();
 		}else {
@@ -273,7 +320,40 @@ public final class CheckDialog extends JDialog {
 		outputArea.setText("");
 	}
 	
-	private String doSeperate() {
+	private String doTextCheck() {
+		String text = textField.getText();
+		StringBuilder sb = new StringBuilder("文本:\t");
+		sb.append(textField.getText().trim());
+		sb.append('\n');
+		
+		BigInteger bint;
+		
+		if (md5check.isSelected()) {
+			bint = getTextMD5(text);
+			sb.append("MD5:\t");
+			sb.append(bint.toString(16));
+			sb.append('\n');
+		}
+
+		if (sha1check.isSelected()) {
+			bint = getTextSHA1(text);
+			sb.append("SHA-1:\t");
+			sb.append(bint.toString(16));
+			sb.append('\n');
+		}
+
+		if (crc32check.isSelected()) {
+			bint = getTextCRC32(text);
+			sb.append("CRC32:\t");
+			sb.append(bint.toString(16));
+			sb.append('\n');
+		}
+		
+		sb.append("\n\n\n");
+		return sb.toString();
+	}
+	
+	private String doFileCheck() {
 		File file = new File(fileField.getText().trim());
 		StringBuilder sb = new StringBuilder("文件:\t");
 		
