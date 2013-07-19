@@ -252,14 +252,17 @@ public final class CheckDialog extends JDialog {
 		/*
 		 * 通过得到屏幕尺寸，计算得到坐标，使对话框在屏幕上居中显示
 		 */
-		final Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
+//		final Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
 		final int width = 500;
 		final int height = 309;
-		final int left = (screen.width - width) / 2;
-		final int top = (screen.height - height) / 2;
-		this.setTitle("编码校验对话框");
-		this.setLocation(left, top);
+//		final int left = (screen.width - width) / 2;
+//		final int top = (screen.height - height) / 2;
+//		this.setLocation(left, top);
 		this.setSize(width, height);
+		
+		this.setLocationRelativeTo(null);
+		
+		this.setTitle("编码校验对话框");
 		this.setResizable(false);
 		this.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 		this.setVisible(true);
