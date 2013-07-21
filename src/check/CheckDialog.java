@@ -2,7 +2,7 @@
  * 文件名：		CheckDialog.java
  * 类名：		CheckDialog
  * 创建日期：	2013-07-11
- * 最近修改：	2013-07-19
+ * 最近修改：	2013-07-21
  * 作者：		徐犇
  */
 package check;
@@ -12,9 +12,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.Cursor;
-import java.awt.Dimension;
 import java.awt.GridLayout;
-import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -41,7 +39,6 @@ import javax.swing.JTextField;
 /**
  * 执行md5、sha-1、crc32等编码计算的对话框，可以对文件进行运算，也可对文本进行
  * @author ben
- * 
  */
 @SuppressWarnings("serial")
 public final class CheckDialog extends JDialog {
